@@ -1,0 +1,30 @@
+#ifndef GRAPH_H
+#define GRAPH_H
+
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <queue>
+#include <limits>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <utility>
+#include <algorithm> // Added for reverse
+
+using namespace std;
+
+class Graph {
+public:
+    void addEdge(const string& src, const string& dest, int weight);
+    void loadFromFile(const string& filename);
+    void findShortestPath(const string& start, const string& end) const;
+
+private:
+    unordered_map<string, vector<pair<string, int>>> adjList;
+
+    vector<string> reconstructPath(
+        const unordered_map<string, string>& prev, const string& end) const;
+};
+
+#endif // GRAPH_H

@@ -1,0 +1,106 @@
+#include "graph.h"
+#include <algorithm> // Added for reverse
+
+void Graph::addEdge(const string &src, const string &dest, int weight) {
+  adjList[src].push_back(make_pair(dest, weight));
+  adjList[dest]; // Ensure destination exists in the adjacency list
+}
+
+void Graph::loadFromFile(const string &filename) {
+  ifstream file(filename.c_str());
+  if (!file.is_open()) {
+    cerr << "Error: Unable to open file " << filename << endl;
+    return;
+  }
+
+  string line;
+  while (getline(file, line)) {
+    stringstream ss(line);
+    string src, dest;
+    int weight;
+    ss >> src >> dest >> weight;
+    addEdge(src, dest, weight);
+  }
+  file.close();
+}
+
+void Graph::findShortestPath(const string &start, const string &end) const {
+  unordered_map<string, int> distances;
+  unordered_map<string, string> previous;
+  priority_queue<pair<int, string>, vector<pair<int, string>>,
+                 greater<pair<int, string>>>
+      pq;
+
+  // Initialize distances to "infinity"
+  for (unordered_map<string, vector<pair<string, int>>>::const_iterator it =
+           adjList.begin();
+       it != adjList.end(); ++it) {
+    distances[it->first] = numeric_limits<int>::max();
+  }
+  distances[start] = 0;
+  pq.push(make_pair(0, start));
+
+  while (!pq.empty()) {
+    pair<int, string> top = pq.top();
+    pq.pop();
+
+    int currentDist = top.first;
+    string current = top.second;
+
+    if (currentDist > distances[current])
+      continue;
+
+    for (size_t i = 0; i < adjList.at(current).size(); ++i) {
+      string neighbor = adjList.at(current)[i].first;
+      int weight = adjList.at(current)[i].second;
+      int newDist = currentDist + weight;
+
+      if (newDist < distances[neighbor]) {
+        distances[neighbor] = newDist;
+        previous[neighbor] = current;
+        pq.push(make_pair(newDist, neighbor));
+      }
+    }
+  }
+
+  if (distances[end] == numeric_limits<int>::max()) {
+    cout << "No path from " << start << " to " << end << endl;
+    return;
+  }
+
+  vector<string> path = reconstructPath(previous, end);
+  cout << "Shortest path from " << start << " to " << end << " is: ";
+  for (size_t i = 0; i < path.size(); ++i) {
+    cout << path[i] << " ";
+  }
+  cout << "\nTotal distance: " << distances[end] << " miles" << endl;
+}
+
+vector<string> Graph::reconstructPath(const unordered_map<string, string> &prev,
+                                      const string &end) const {
+  vector<string> path;
+  for (string at = end; !at.empty(); at = prev.count(at) ? prev.at(at) : "") {
+    path.push_back(at);
+  }
+  reverse(path.begin(), path.end());
+  return path;
+}
+
+int main() {
+  Graph graph;
+  string filename;
+
+  cout << "Enter the name of the graph file: ";
+  cin >> filename;
+  graph.loadFromFile(filename);
+
+  string start, end;
+  cout << "Enter the starting vertex: ";
+  cin >> start;
+  cout << "Enter the ending vertex: ";
+  cin >> end;
+
+  graph.findShortestPath(start, end);
+
+  return 0;
+}
